@@ -140,6 +140,24 @@ class Seq2SeqModel(object):
           output_projection=output_projection,
           feed_previous=do_decode,
           dtype=dtype)
+    
+    if 'encoder_cell' in inspect.getargspec(
+        tf.contrib.legacy_seq2seq.embedding_attention_seq2seq).args:
+      encoder_cell = single_cell()
+      if num_layers > 1:
+        encoder_cell = tf.contrib.rnn.MultiRNNCell([single_cell() for _ in range(num_layers)])
+        def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
+          return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(
+              encoder_inputs,
+              decoder_inputs,
+              cell,
+              num_encoder_symbols=source_vocab_size,
+              num_decoder_symbols=target_vocab_size,
+              embedding_size=size,
+              encoder_cell=encoder_cell,
+              output_projection=output_projection,
+              feed_previous=do_decode,
+              dtype=dtype)
 
     # Feeds for inputs.
     self.encoder_inputs = []
